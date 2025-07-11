@@ -11,7 +11,9 @@ public class HelloApplication extends Application {
     @Override
     public void start(Stage stage){
         //WriteUnivertyReview(stage);
-        WriteBursaryReview(stage);
+        //WriteBursaryReview(stage);
+        ViewUniReviews(stage);
+        //ViewBursaryReviews(stage);
     }
 
     public void WriteUnivertyReview(Stage stage100)
@@ -48,6 +50,43 @@ public class HelloApplication extends Application {
             e.printStackTrace();
         }
     }
+
+    public void ViewUniReviews(Stage stage700)
+    {
+        try{
+            FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("ViewUniversityReview.fxml"));
+            Scene scene = new Scene(fxmlLoader.load(), 320, 240);
+            stage700.setTitle("Project");
+            stage700.setWidth(605);
+            stage700.setHeight(460);
+            stage700.setScene(scene);
+            //stage100.setMaximized(true);
+            stage700.show();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void ViewBursaryReviews(Stage stage800)
+    {
+        try{
+            FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("ViewBursaryReview.fxml"));
+            Scene scene = new Scene(fxmlLoader.load(), 320, 240);
+            stage800.setTitle("Project");
+            stage800.setWidth(605);
+            stage800.setHeight(460);
+            stage800.setScene(scene);
+            //stage100.setMaximized(true);
+            stage800.show();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
 
     public static void main(String[] args) {
         launch();

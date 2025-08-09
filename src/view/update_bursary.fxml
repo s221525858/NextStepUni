@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #f0f0f0;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.AddBursaryController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #f0f0f0;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.UpdateBursaryController">
     <top>
         <VBox alignment="TOP_CENTER" prefWidth="800.0">
             <StackPane alignment="CENTER" prefHeight="70.0" style="-fx-background-color: #ff3131;">
@@ -57,7 +57,7 @@
     <center>
         <VBox alignment="TOP_LEFT" BorderPane.alignment="CENTER">
             <children>
-                <Label text="Add Bursary">
+                <Label text="Update Bursary">
                     <font>
                         <Font name="Bodoni MT Condensed Bold" size="27.0" />
                     </font>
@@ -91,9 +91,9 @@
                             <font>
                                 <Font size="14.0" />
                             </font>
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
+                            <opaqueInsets>
+                                <Insets />
+                            </opaqueInsets>
                         </Label>
                         <Label text="Description:" GridPane.rowIndex="3">
                             <font>
@@ -123,7 +123,7 @@
                         <Insets right="10.0" />
                     </HBox.margin>
                 </Button>
-                <Button mnemonicParsing="false" onAction="#handleSave" style="-fx-background-color: #d51e1e; -fx-text-fill: white; -fx-font-weight: bold;" text="Save" prefWidth="80.0">
+                <Button mnemonicParsing="false" onAction="#handleUpdate" style="-fx-background-color: #d51e1e; -fx-text-fill: white; -fx-font-weight: bold;" text="Update" prefWidth="80.0">
                     <font>
                         <Font size="14.0" />
                     </font>

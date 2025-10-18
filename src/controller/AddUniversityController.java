@@ -4,6 +4,7 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -18,6 +19,7 @@ import util.SceneManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,9 +27,11 @@ import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.Optional;
+import java.util.ResourceBundle;
 
-public class AddUniversityController {
+public class AddUniversityController extends BaseController implements Initializable {
 
     @FXML
     private ImageView universityImageView;
@@ -42,10 +46,6 @@ public class AddUniversityController {
     @FXML
     private TextArea descriptionArea;
     @FXML
-    private Button backButton;
-    @FXML
-    private StackPane rootStackPane;
-    @FXML
     private VBox mainContentVBox;
     @FXML
     private ProgressIndicator loadingIndicator;
@@ -53,10 +53,9 @@ public class AddUniversityController {
 
     private File selectedImageFile;
 
-
-    @FXML
-    public void handleBackClick(ActionEvent event) {
-        SceneManager.switchTo("/view/manage_universities.fxml");
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        setupHeader();
     }
 
 
@@ -134,11 +133,13 @@ public class AddUniversityController {
             showLoading(false);
             Throwable exception = saveTask.getException();
             if (exception instanceof IOException) {
-               AlertUtil.showError("File Error", "Could not save the image file: " + exception.getMessage());
+               AlertUtil.showError("File Error", "Could not save the image file.");
+               System.out.println(exception.getMessage());
             } else if (exception instanceof SQLException) {
-                AlertUtil.showError("Database Error", "An error occurred while saving: " + exception.getMessage());
+                AlertUtil.showError("Database Error", "Something went wrong while accessing the database. Please try again.");
+                System.out.println(exception.getMessage());
             } else {
-                AlertUtil.showError("Unexpected Error", "An unexpected error occurred during the save operation.");
+                AlertUtil.showError("Unexpected Error", "An unexpected error occurred during the save operation. Please try again.");
             }
             exception.printStackTrace();
         });
@@ -163,13 +164,29 @@ public class AddUniversityController {
 
 
     private boolean validateInput() {
+        LocalDate deadline = applicationDeadlinePicker.getValue();
+        String website = websiteLinkField.getText();
         if (universityNameField.getText() == null || universityNameField.getText().trim().isEmpty()) {
             AlertUtil.showError("Invalid Input", "University Name is a required field.");
             return false;
         }
-        return true;
+
+        return validateDateAndWebLink(deadline, website);
     }
 
+    static boolean validateDateAndWebLink(LocalDate deadline, String website) {
+        if (website != null && !website.trim().isEmpty()) {
+            if (!website.matches("^(http|https)://.*$")) {
+                AlertUtil.showError("Validation Error", "Website link must start with http:// or https://");
+                return false;
+            }
+        }
+        if (deadline == null) {
+            AlertUtil.showError("Validation Error", "Application deadline is required.");
+            return false;
+        }
+        return true;
+    }
 
 
     private void showSuccessAlertAndNavigate(Event event) {
@@ -201,5 +218,6 @@ public class AddUniversityController {
         }
         return fileName.substring(lastIndexOf + 1);
     }
+
 
 }

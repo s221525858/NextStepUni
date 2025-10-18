@@ -17,7 +17,7 @@ public class Main extends Application {
         primaryStage.setMaximized(true);
 
 
-        SceneManager.switchTo("/view/manage_universities.fxml");
+        SceneManager.switchTo("/view/login_view.fxml");
     }
 
 

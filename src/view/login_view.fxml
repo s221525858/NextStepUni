@@ -1,20 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.Hyperlink?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.PasswordField?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-
 <StackPane alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #f0f0f0;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.LoginController">
+    <fx:define>
+        <ToggleGroup fx:id="roleGroup"/>
+    </fx:define>
     <children>
         <VBox alignment="CENTER" maxWidth="400.0" spacing="15.0">
+
             <padding>
                 <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
             </padding>
@@ -54,6 +50,12 @@
                     </Hyperlink>
                 </children>
             </HBox>
+            <HBox alignment="CENTER" spacing="20">
+                <children>
+                    <RadioButton fx:id="adminRadio" text="Admin" toggleGroup="$roleGroup"/>
+                    <RadioButton fx:id="studentRadio" text="Student" toggleGroup="$roleGroup" selected="true"/>
+                </children>
+            </HBox>
 
             <Button fx:id="loginButton" onAction="#handleLogin" prefHeight="40.0" prefWidth="400.0" style="-fx-background-color: #d51e1e; -fx-background-radius: 5;" text="Login" textFill="WHITE">
                 <font>
@@ -76,7 +78,16 @@
                 <VBox.margin>
                     <Insets top="5.0" />
                 </VBox.margin>
+
+
             </HBox>
+            <Hyperlink onAction="#handleContinueAsGuest" text="Continue as Guest" textFill="#d51e1e">
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font>
+        </Hyperlink>
+
         </VBox>
+
     </children>
 </StackPane>

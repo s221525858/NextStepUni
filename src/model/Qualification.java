@@ -5,5 +5,19 @@ public class Qualification {
     private String qualType;
     private String qualFaculty;
 
-    // Constructors, Getters, Setters
+    public Qualification(int qualID, String qualType, String qualFaculty) {
+        this.qualID = qualID;
+        this.qualType = qualType;
+        this.qualFaculty = qualFaculty;
+    }
+
+    public int getQualID() {
+        return qualID;
+    }
+
+    @Override
+    public String toString() {
+        return qualType + " (" + qualFaculty + ")";
+    }
+
 }

@@ -1,17 +1,12 @@
 package controller;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.DialogPane;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 
 import model.UserSession;
 import org.mindrot.jbcrypt.BCrypt;
+import util.AlertUtil;
 import util.DatabaseConnector;
 import util.SceneManager;
 
@@ -22,6 +17,8 @@ import java.sql.SQLException;
 
 public class LoginController {
 
+    @FXML
+    private ToggleGroup roleGroup;
     @FXML
     private TextField emailField;
     @FXML
@@ -35,68 +32,72 @@ public class LoginController {
     @FXML
     private ImageView backArrow;
 
+    @FXML
+    private RadioButton adminRadio;
+
 
     @FXML
     private void handleLogin() {
         String email = emailField.getText();
         String password = passwordField.getText();
+        String selectedRole = adminRadio.isSelected() ? "Admin" : "Student";
 
         if (email.isEmpty() || password.isEmpty()) {
-            showErrorAlert("Login Failed", "Email and password fields cannot be empty.");
+            AlertUtil.showError("Login Failed", "All fields including role selection are required.");
             return;
         }
 
-        if (validateCredentials(email, password)) {
+        if (validateCredentials(email, password, selectedRole)) {
             SceneManager.switchTo("/view/dashboard.fxml");
         } else {
-            showErrorAlert("Login Failed", "Invalid email or password. Please try again.");
+            AlertUtil.showError("Login Failed", "Invalid credentials for selected role.");
         }
     }
-    private boolean validateCredentials(String email, String password) {
+    @FXML
+    private void handleContinueAsGuest() {
+        UserSession.getInstance().login(0, "Guest", UserSession.UserRole.GUEST);
+        SceneManager.switchTo("/view/dashboard.fxml");
+    }
+    private boolean validateCredentials(String email, String password, String role) {
+        String sql;
+        boolean isAdmin = role.equals("Admin");
 
-        String adminSql = "SELECT UserName, Password FROM Admin WHERE UserName = ?";
+        if (isAdmin) {
+            sql = "SELECT AdminID, UserName, Password FROM Admin WHERE UserName = ?";
+        } else {
+            sql = "SELECT StudentID, StuFName, Password FROM Student WHERE EmailAddress = ?";
+        }
+
         Connection conn = DatabaseConnector.getInstance().getConnection();
 
-        try (PreparedStatement pstmt = conn.prepareStatement(adminSql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, email);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                String storedHash = rs.getString("AdminPassword");
+                String storedPassword = rs.getString("Password");
 
-                if (BCrypt.checkpw(password, storedHash)) {
-                    String adminName = rs.getString("AdminName");
-
-                    UserSession.getInstance().login(adminName, UserSession.UserRole.ADMIN);
+                if (password.equals(storedPassword)) {
+                    if (isAdmin) {
+                        int id = rs.getInt("AdminID");
+                        String adminName = rs.getString("UserName");
+                        UserSession.getInstance().login(id, adminName, UserSession.UserRole.ADMIN);
+                    } else {
+                        int id = rs.getInt("StudentID");
+                        String studentName = rs.getString("StuFName");
+                        UserSession.getInstance().login(id, studentName, UserSession.UserRole.STUDENT);
+                    }
                     return true;
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            AlertUtil.showError("Database Error", "An error occurred while trying to log in.");
         }
 
-
-        String studentSql = "SELECT StuFName, Password FROM Student WHERE EmailAddress = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(studentSql)) {
-            pstmt.setString(1, email);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                String storedHash = rs.getString("StudentPassword");
-
-                if (BCrypt.checkpw(password, storedHash)) {
-                    String studentName = rs.getString("StudentName");
-
-                    UserSession.getInstance().login(studentName, UserSession.UserRole.STUDENT);
-                    return true;
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            showErrorAlert("Database Error", "An error occurred while trying to log in.");
-        }
         return false;
     }
+
 
     @FXML
     private void handleShowPassword() {
@@ -128,17 +129,6 @@ public class LoginController {
     @FXML
     private void handleGoBack() {
         SceneManager.switchTo("/view/dashboard.fxml");
-    }
-
-    private void showErrorAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(title);
-        alert.setContentText(content);
-        DialogPane dialogPane = alert.getDialogPane();
-        Button okButton = (Button) dialogPane.lookupButton(ButtonType.OK);
-        okButton.setStyle("-fx-background-color: #d51e1e; -fx-text-fill: white; -fx-font-weight: bold;");
-        alert.showAndWait();
     }
 
 }

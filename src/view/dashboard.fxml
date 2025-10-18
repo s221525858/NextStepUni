@@ -16,14 +16,14 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="700.0" prefWidth="900.0" style="-fx-background-color: #f0f0f0;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.DashboardController">
+<BorderPane prefHeight="700.0" prefWidth="900.0" style="-fx-background-color: #f0f0f0;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.DashboardController">
     <top>
         <VBox alignment="TOP_CENTER">
             <StackPane alignment="CENTER" prefHeight="70.0" style="-fx-background-color: #ff3131;">
                 <children>
                     <Label text="NextStepUni" textFill="WHITE">
                         <font>
-                            <Font name="Bookman Old Style Bold" size="56.0" />
+                            <Font name="Britannic Bold" size="50.0" />
                         </font>
                     </Label>
                 </children>

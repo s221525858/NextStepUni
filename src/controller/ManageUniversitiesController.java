@@ -18,6 +18,7 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import model.University;
+import util.AlertUtil;
 import util.DatabaseConnector;
 import util.SceneManager;
 
@@ -27,12 +28,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-public class ManageUniversitiesController implements Initializable {
+public class ManageUniversitiesController extends BaseController implements Initializable {
 
     @FXML
     private TableView<University> universityTableView;
@@ -56,9 +60,13 @@ public class ManageUniversitiesController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        setupHeader();
         loadUniversitiesFromDatabase();
         configureTableColumns();
         setupFilterAndSort();
+
+        sortComboBox.getItems().addAll("Default", "By Name", "By Location", "By Deadline");
+        sortComboBox.setValue("Default");
     }
     private void loadUniversitiesFromDatabase() {
         universityList.clear();
@@ -89,24 +97,20 @@ public class ManageUniversitiesController implements Initializable {
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("uniName"));
         locationColumn.setCellValueFactory(new PropertyValueFactory<>("location"));
         deadlineColumn.setCellValueFactory(new PropertyValueFactory<>("applicationDeadline"));
+        nameColumn.setSortable(false);
+        locationColumn.setSortable(false);
+        deadlineColumn.setSortable(false);
+        websiteColumn.setSortable(false);
+        actionColumn.setSortable(false);
+
         websiteColumn.setCellFactory(createWebsiteCellFactory());
         actionColumn.setCellFactory(createActionCellFactory());
-        universityTableView.setRowFactory(tv -> {
-            TableRow<University> row = new TableRow<>();
-            row.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
-                if (isNowSelected) {
-                    row.setStyle("-fx-background-color: #d51e1e; -fx-text-fill: white;");
-                } else {
-                    row.setStyle("");
-                }
-            });
-            return row;
-        });
     }
 
     private void setupFilterAndSort() {
         FilteredList<University> filteredData = new FilteredList<>(universityList, b -> true);
-        searchField.textProperty().addListener((obs, old, aNew) -> {
+
+        searchField.textProperty().addListener((_, _, aNew) -> {
             filteredData.setPredicate(university -> {
                 if (aNew == null || aNew.isEmpty()) return true;
                 return university.getUniName().toLowerCase().contains(aNew.toLowerCase());
@@ -114,9 +118,25 @@ public class ManageUniversitiesController implements Initializable {
         });
 
         SortedList<University> sortedData = new SortedList<>(filteredData);
-        sortedData.comparatorProperty().bind(universityTableView.comparatorProperty());
+
+
+        sortComboBox.valueProperty().addListener((_, _, newVal) -> {
+            sortedData.setComparator((u1, u2) -> {
+                if ("By Name".equals(newVal)) {
+                    return u1.getUniName().compareToIgnoreCase(u2.getUniName());
+                } else if ("By Location".equals(newVal)) {
+                    return u1.getLocation().compareToIgnoreCase(u2.getLocation());
+                } else if ("By Deadline".equals(newVal)) {
+                    return u1.getApplicationDeadline().compareTo(u2.getApplicationDeadline());
+                } else {
+                    return 0;
+                }
+            });
+        });
+
         universityTableView.setItems(sortedData);
     }
+
 
     private Callback<TableColumn<University, String>, TableCell<University, String>> createWebsiteCellFactory() {
         return param -> new TableCell<>() {
@@ -186,30 +206,31 @@ public class ManageUniversitiesController implements Initializable {
     }
 
     private void handleDeleteUniversity(University university) {
-        ButtonType deleteButtonType = new ButtonType("Delete", ButtonBar.ButtonData.OK_DONE);
-        ButtonType cancelButtonType = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
 
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirm Deletion");
-        alert.setHeaderText("Delete: " + university.getUniName());
-        alert.setContentText("Are you sure you want to delete this university?");
-        alert.getButtonTypes().setAll(cancelButtonType,deleteButtonType);
-        final Button deleteButton = (Button) alert.getDialogPane().lookupButton(deleteButtonType);
-        deleteButton.setStyle("-fx-background-color: #d51e1e; -fx-text-fill: white; -fx-font-weight: bold;");
+        boolean confirmed = AlertUtil.showCustomConfirmation(
+                "Confirm Deletion",
+                "Delete Bursary: " + university.getUniName(),
+                "Are you sure you want to delete this university?",
+                "Delete",
+                "Cancel"
+        );
 
-        final Button cancelButton = (Button) alert.getDialogPane().lookupButton(cancelButtonType);
-        cancelButton.setDefaultButton(true);
-
-        Optional<ButtonType> result = alert.showAndWait();
-
-
-        if (result.isPresent() && result.get() == ButtonType.OK) {
+        if (confirmed) {
             String sql = "DELETE FROM University WHERE UniversityID = ?";
             try (Connection conn = DatabaseConnector.getInstance().getConnection();
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, university.getUniversityID());
                 if (pstmt.executeUpdate() > 0) {
                     universityList.remove(university);
+                    if(university.getUniPicturePath() != null){
+                        Path imagePath = Paths.get("university_images").resolve(university.getUniPicturePath());
+                        try{
+                            Files.deleteIfExists(imagePath);
+                            System.out.println("Deleted image: "+imagePath.toAbsolutePath());
+                        }catch (IOException e){
+                            AlertUtil.showError("File Error", "Could not delete image logo from disk.");
+                        }
+                    }
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -226,7 +247,7 @@ public class ManageUniversitiesController implements Initializable {
     }
 
     @FXML
-    private void handleBackArrowClick(MouseEvent event) {
+    private void handleBackClick() {
         SceneManager.switchTo("/view/dashboard.fxml");
     }
 

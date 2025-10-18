@@ -1,6 +1,7 @@
 package controller;
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -15,6 +16,7 @@ import util.SceneManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,9 +24,13 @@ import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ResourceBundle;
+
+import static controller.AddUniversityController.validateDateAndWebLink;
 
 
-public class UpdateUniversityController {
+public class UpdateUniversityController extends BaseController implements Initializable {
     @FXML
     private ImageView universityImageView;
     @FXML
@@ -37,11 +43,15 @@ public class UpdateUniversityController {
     private DatePicker applicationDeadlinePicker;
     @FXML
     private TextArea descriptionArea;
-    @FXML
-    private ImageView backArrow;
 
     private University currentUniversity;
+
     private File newImageFile;
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        setupHeader();
+    }
 
     public void initData(University university) {
         this.currentUniversity = university;
@@ -56,13 +66,12 @@ public class UpdateUniversityController {
     }
     @FXML
     private void handleUpdate() {
-        if (universityNameField.getText().isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Validation Error", "University Name cannot be empty.");
+        if (!validateInput()) {
             return;
         }
 
         String sql = "UPDATE University SET UniName = ?, Location = ?, WebsiteLink = ?, ApplicationDeadline = ?, Description = ?, UniPicturePath = ? WHERE UniversityID = ?";
-        String imagePath = currentUniversity.getUniPicturePath(); // Start with the existing image path
+        String imagePath = currentUniversity.getUniPicturePath();
 
         try {
             if (newImageFile != null) {
@@ -119,13 +128,12 @@ public class UpdateUniversityController {
 
     @FXML
     private void handleCancel() {
-        SceneManager.switchTo("/view/manage_universities.fxml");
+        boolean confirm = AlertUtil.showConfirmation("Confirm Cancellation", "Any unsaved changes will be lost. Are you sure?");
+        if(confirm) {
+            SceneManager.switchTo("/view/manage_universities.fxml");
+        }
     }
 
-    @FXML
-    private void handleBackArrowClick(MouseEvent event) {
-        handleCancel();
-    }
     private void loadUniversityImage(String imagePath) {
         if (imagePath != null && !imagePath.isEmpty()) {
             try {
@@ -162,17 +170,16 @@ public class UpdateUniversityController {
         int lastIndexOf = fileName.lastIndexOf(".");
         return (lastIndexOf == -1) ? "" : fileName.substring(lastIndexOf + 1);
     }
+    private boolean validateInput() {
+        LocalDate deadline = applicationDeadlinePicker.getValue();
+        String website = websiteLinkField.getText();
+        if (universityNameField.getText() == null || universityNameField.getText().trim().isEmpty()) {
+            AlertUtil.showError("Invalid Input", "University Name is a required field.");
+            return false;
+        }
 
-    private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        DialogPane dialogPane = alert.getDialogPane();
-        Button okButton = (Button) dialogPane.lookupButton(ButtonType.OK);
-        okButton.setStyle("-fx-background-color: #d51e1e; -fx-text-fill: white; -fx-font-weight: bold;");
-        alert.showAndWait();
-
-
+        return validateDateAndWebLink(deadline, website);
     }
+
+
 }

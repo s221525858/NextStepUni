@@ -14,12 +14,7 @@ import util.SceneManager;
 import java.net.URL;
 import java.util.*;
 
-public class DashboardController implements Initializable {
-
-    @FXML
-    private Button loginButton;
-    @FXML
-    private MenuButton profileButton;
+public class DashboardController extends BaseController implements Initializable {
     @FXML
     private Label welcomeLabel;
     @FXML
@@ -32,39 +27,68 @@ public class DashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        boolean isUserLoggedIn = checkUserLoginStatus();
-        setupDashboard(isUserLoggedIn);
+        setupHeader();
+        setupDashboard();
     }
 
-    private void setupDashboard(boolean isLoggedIn) {
-        loginButton.setVisible(!isLoggedIn);
-        loginButton.setManaged(!isLoggedIn);
-        profileButton.setVisible(isLoggedIn);
-        profileButton.setManaged(isLoggedIn);
 
+    private void setupDashboard() {
+        UserSession session = UserSession.getInstance();
+        UserSession.UserRole role = session.getRole();
+
+        boolean isLoggedIn = role != UserSession.UserRole.GUEST;
         welcomeLabel.setVisible(isLoggedIn);
         welcomeLabel.setManaged(isLoggedIn);
+
         if (isLoggedIn) {
-            String studentName = UserSession.getInstance().getUserName();
-            welcomeLabel.setText("Welcome, " + studentName);
+            welcomeLabel.setText("Welcome, " + session.getUserName());
         }
 
-        populateDashboardCards(isLoggedIn);
+        populateDashboardCards(role);
     }
 
-    private void populateDashboardCards(boolean isLoggedIn) {
+
+    private void populateDashboardCards(UserSession.UserRole role) {
         dashboardFlowPane.getChildren().clear();
 
-        Node universitiesCard = createDashboardCard("View Universities", "/images/icons/universities_icon.png", this::handleViewUniversities);
-        Node bursariesCard = createDashboardCard("View Bursaries", "/images/icons/bursaries_icon.png", this::handleViewBursaries);
-        Node reviewsCard = createDashboardCard("View Reviews", "/images/icons/reviews_icon.png", this::handleViewReviews);
+        if (role == UserSession.UserRole.GUEST) {
+            Node universitiesCard = createDashboardCard("View Universities", "/images/icons/universities_icon.png", this::handleViewUniversities);
+            Node bursariesCard = createDashboardCard("View Bursaries", "/images/icons/bursaries_icon.png", this::handleViewBursaries);
+            Node reviewsCard = createDashboardCard("View Reviews", "/images/icons/reviews_icon.png", this::handleViewReviews);
 
-        dashboardFlowPane.getChildren().addAll(universitiesCard, bursariesCard, reviewsCard);
-
-        if (isLoggedIn) {
+            dashboardFlowPane.getChildren().addAll(universitiesCard, bursariesCard, reviewsCard);
+        } else if (role == UserSession.UserRole.STUDENT) {
+            Node universitiesCard = createDashboardCard("View Universities", "/images/icons/universities_icon.png", this::handleViewUniversities);
+            Node bursariesCard = createDashboardCard("View Bursaries", "/images/icons/bursaries_icon.png", this::handleViewBursaries);
+            Node reviewsCard = createDashboardCard("View Reviews", "/images/icons/reviews_icon.png", this::handleViewReviews);
             Node writeReviewCard = createDashboardCard("Write Reviews", "/images/icons/write_review_icon.png", this::handleWriteReview);
-            dashboardFlowPane.getChildren().add(writeReviewCard);
+
+            dashboardFlowPane.getChildren().addAll(universitiesCard, bursariesCard, reviewsCard, writeReviewCard);
+        } else if (role == UserSession.UserRole.ADMIN) {
+            Node verifyStudentsCard = createDashboardCard("Verify Students", "/images/icons/verify_icon.png", this::handleVerify);
+            Node manageUniversitiesCard = createDashboardCard("Manage Universities", "/images/icons/universities_icon.png", this::handleManageUniversities);
+            Node manageBursariesCard = createDashboardCard("Manage Bursaries", "/images/icons/bursaries_icon.png", this::handleMangeBursaries);
+            Node viewQualificationCard = createDashboardCard("View Qualification", "/images/icons/qualification_icon.png", this::handleViewQualification);
+
+            dashboardFlowPane.getChildren().addAll(verifyStudentsCard, manageUniversitiesCard, manageBursariesCard, viewQualificationCard);
         }
+    }
+
+    @FXML
+    private void handleManageUniversities() {
+        SceneManager.switchTo("/view/manage_universities.fxml");
+    }
+
+    private void handleMangeBursaries() {
+        SceneManager.switchTo("/view/manage_bursaries.fxml");
+    }
+
+
+    private void handleViewQualification() {System.out.println("View Qualifications button clicked");}
+
+    @FXML
+    private void handleVerify() {
+        System.out.println("Verify button clicked");
     }
 
     private Node createDashboardCard(String title, String imagePath, Runnable action) {
@@ -128,18 +152,9 @@ public class DashboardController implements Initializable {
 
     @FXML
     private void handleLogout() {
-        System.out.println("User logging out...");
         UserSession.getInstance().logout();
-        setupDashboard(false);
+        setupDashboard();
     }
-    private void showErrorAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(title);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
     private boolean checkUserLoginStatus() {
         return UserSession.getInstance().isLoggedIn();
     }

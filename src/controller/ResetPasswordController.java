@@ -26,6 +26,10 @@ public class ResetPasswordController {
     @FXML
     private PasswordField confirmPasswordField;
 
+
+    public void setEmail(String email) {
+        emailField.setText(email);
+    }
     @FXML
     private void handleResetPassword() {
         String email = emailField.getText();
@@ -37,26 +41,26 @@ public class ResetPasswordController {
             showAlert(Alert.AlertType.ERROR, "Error", "All fields are required.");
             return;
         }
+
         if (!newPassword.equals(confirmPassword)) {
             showAlert(Alert.AlertType.ERROR, "Error", "Passwords do not match.");
             return;
         }
 
         if (isCodeValid(email, code)) {
-            String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt(12));
-            if (updatePassword(email, hashedPassword)) {
+            if (updatePassword(email, newPassword)) {
                 showAlert(Alert.AlertType.INFORMATION, "Success", "Your password has been reset successfully. Please log in.");
-                SceneManager.switchTo("/view/login.fxml");
+                SceneManager.switchTo("/view/login_view.fxml");
             } else {
                 showAlert(Alert.AlertType.ERROR, "Error", "Failed to update password.");
             }
+
         } else {
             showAlert(Alert.AlertType.ERROR, "Error", "Invalid or expired reset code.");
         }
     }
-
     private boolean isCodeValid(String email, String code) {
-        String sql = "SELECT ResetCode, ResetCodeTimestamp FROM Student WHERE StudentEmail = ?";
+        String sql = "SELECT ResetCode, ResetCodeTimestamp FROM Student WHERE EmailAddress = ?";
         try (PreparedStatement pstmt = DatabaseConnector.getInstance().getConnection().prepareStatement(sql)) {
             pstmt.setString(1, email);
             ResultSet rs = pstmt.executeQuery();
@@ -78,11 +82,10 @@ public class ResetPasswordController {
         }
         return false;
     }
-
-    private boolean updatePassword(String email, String hashedPassword) {
+    private boolean updatePassword(String email, String password) {
         String sql = "UPDATE Student SET Password = ?, ResetCode = NULL, ResetCodeTimestamp = NULL WHERE EmailAddress = ?";
         try (PreparedStatement pstmt = DatabaseConnector.getInstance().getConnection().prepareStatement(sql)) {
-            pstmt.setString(1, hashedPassword);
+            pstmt.setString(1, password);
             pstmt.setString(2, email);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {

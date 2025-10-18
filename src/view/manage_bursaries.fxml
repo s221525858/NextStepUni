@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
@@ -15,76 +16,89 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<?import javafx.scene.Cursor?>
-<BorderPane prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ManageBursariesController">
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.MenuItem?>
+<BorderPane prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ManageBursariesController">
     <top>
         <VBox alignment="TOP_CENTER" prefWidth="800.0" BorderPane.alignment="CENTER">
             <children>
-                <!-- Top Red Header Bar -->
                 <StackPane alignment="CENTER" prefHeight="70.0" style="-fx-background-color: #ff3131;">
                     <children>
                         <Label text="NextStepUni" textFill="WHITE">
                             <font>
-                                <Font name="Bookman Old Style Bold" size="56.0" />
+                                <Font name="Britannic Bold" size="50.0" />
                             </font>
                         </Label>
                     </children>
                 </StackPane>
-                <!-- Second Red Header Bar with ONLY the Home Icon -->
                 <HBox alignment="CENTER_LEFT" prefHeight="50.0" style="-fx-background-color: #d51e1e;">
                     <children>
-                        <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                        <ImageView fx:id="homeButton" fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
                             <image>
                                 <Image url="@/images/icons/home.png" />
                             </image>
                             <HBox.margin>
                                 <Insets left="20.0" />
                             </HBox.margin>
+                            <cursor>
+                                <Cursor fx:constant="HAND" />
+                            </cursor>
                         </ImageView>
-                        <!-- The back arrow has been moved out of this HBox -->
+                        <HBox HBox.hgrow="ALWAYS" />
+
+                        <StackPane>
+                            <children>
+                                <MenuButton fx:id="profileButton" contentDisplay="GRAPHIC_ONLY" managed="false" mnemonicParsing="false" style="-fx-background-color: transparent;" visible="false">
+                                    <items>
+                                        <MenuItem mnemonicParsing="false" onAction="#handleViewProfile" text="View Profile" />
+                                        <MenuItem mnemonicParsing="false" onAction="#handleLogout" text="Logout" />
+                                    </items>
+                                    <graphic>
+                                        <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                                            <image>
+                                                <Image url="@/images/icons/profile_icon.png" />
+                                            </image>
+                                        </ImageView>
+                                    </graphic>
+                                </MenuButton>
+                            </children>
+                            <HBox.margin>
+                                <Insets right="20.0" />
+                            </HBox.margin>
+                        </StackPane>
                     </children>
                 </HBox>
             </children>
         </VBox>
     </top>
-
-    <!-- NEW SECTION for the side navigation -->
-    <left>
-        <VBox alignment="TOP_LEFT" BorderPane.alignment="TOP_LEFT">
-            <children>
-                <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
-                    <image>
-                        <Image url="@/images/icons/arrow.png" />
-                    </image>
-                    <cursor>
-                        <Cursor fx:constant="HAND" />
-                    </cursor>
-                </ImageView>
-            </children>
-            <BorderPane.margin>
-                <!-- Padding to position the arrow correctly -->
-                <Insets left="20.0" top="10.0" />
-            </BorderPane.margin>
-        </VBox>
-    </left>
-
     <center>
         <VBox alignment="TOP_CENTER" spacing="15.0" BorderPane.alignment="CENTER">
             <padding>
-                <!-- Adjusted left padding to make space for the arrow -->
                 <Insets bottom="20.0" left="20.0" right="50.0" top="20.0" />
             </padding>
             <children>
-                <!-- Manage Bursaries Title -->
-                <Label text="Manage Bursaries">
-                    <font>
-                        <Font name="System Bold" size="24.0" />
-                    </font>
-                </Label>
-                <!-- Controls: Add, Search, and Sort -->
+                <HBox alignment="CENTER" spacing="10.0" prefWidth="900.0">
+                    <children>
+                        <Button onAction="#handleBackClick"
+                                style="-fx-background-color: #d51e1e; -fx-text-fill: white; -fx-font-weight: bold;"
+                                text="Back">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                        </Button>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label text="Manage Bursaries">
+                            <font>
+                                <Font name="Bodoni MT Condensed Bold" size="27.0" />
+                            </font>
+                        </Label>
+                        <Region HBox.hgrow="ALWAYS" />
+                    </children>
+                </HBox>
+
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <children>
-                        <!-- Add Bursary Button -->
                         <Button fx:id="addButton" contentDisplay="GRAPHIC_ONLY" onAction="#handleAddBursary" style="-fx-background-color: transparent; -fx-padding: 5;">
                             <graphic>
                                 <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
@@ -97,7 +111,6 @@
                                 </ImageView>
                             </graphic>
                         </Button>
-                        <!-- Search Bar with Icon -->
                         <StackPane HBox.hgrow="ALWAYS">
                             <children>
                                 <TextField fx:id="searchField" promptText="Search for bursaries..." style="-fx-border-radius: 5; -fx-background-radius: 5;" />
@@ -119,7 +132,6 @@
                         <ComboBox fx:id="sortComboBox" prefWidth="150.0" />
                     </children>
                 </HBox>
-                <!-- Bursaries Table -->
                 <TableView fx:id="bursaryTableView" prefHeight="400.0" style="-fx-border-color: #cccccc;">
                     <columns>
                         <TableColumn fx:id="bursaryNameColumn" prefWidth="200.0" text="Bursary Name" />

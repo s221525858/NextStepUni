@@ -11,6 +11,7 @@ public class UserSession {
 
     private String userName;
     private UserRole role;
+    private int Id;
 
     private UserSession() {
 
@@ -33,13 +34,17 @@ public class UserSession {
         return role;
     }
 
+    public int getId() {
+        return Id;
+    }
     public boolean isLoggedIn() {
         return role != UserRole.GUEST;
     }
 
-    public void login(String name, UserRole userRole) {
+    public void login(int Id,String name, UserRole userRole) {
         this.userName = name;
         this.role = userRole;
+        this.Id = Id;
     }
 
     public void logout() {

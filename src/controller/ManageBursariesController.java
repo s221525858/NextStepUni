@@ -15,10 +15,10 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import model.Bursary;
-import model.University;
 import util.AlertUtil;
 import util.DatabaseConnector;
 import util.SceneManager;
@@ -35,7 +35,7 @@ import java.time.LocalDate;
 
 import java.util.ResourceBundle;
 
-public class ManageBursariesController implements Initializable {
+public class ManageBursariesController extends BaseController implements Initializable {
 
 
     @FXML
@@ -57,12 +57,15 @@ public class ManageBursariesController implements Initializable {
 
     private final ObservableList<Bursary> bursaryList = FXCollections.observableArrayList();
 
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        setupHeader();
         loadBursariesFromDatabase();
         configureTableColumns();
         setupFilterAndSort();
-        sortComboBox.getItems().addAll("By Name", "By Deadline");
+        sortComboBox.getItems().addAll("Default", "By Name", "By Deadline");
+        sortComboBox.setValue("Default");
     }
 
     private void loadBursariesFromDatabase() {
@@ -92,6 +95,11 @@ public class ManageBursariesController implements Initializable {
         deadlineColumn.setCellValueFactory(new PropertyValueFactory<>("applicationDeadline"));
         websiteColumn.setCellFactory(createWebsiteCellFactory());
         actionColumn.setCellFactory(createActionCellFactory());
+        bursaryNameColumn.setSortable(false);
+        deadlineColumn.setSortable(false);
+        websiteColumn.setSortable(false);
+        actionColumn.setSortable(false);
+
 
     }
 
@@ -106,7 +114,19 @@ public class ManageBursariesController implements Initializable {
         });
 
         SortedList<Bursary> sortedData = new SortedList<>(filteredData);
-        sortedData.comparatorProperty().bind(bursaryTableView.comparatorProperty());
+
+        sortComboBox.valueProperty().addListener((_, _, newVal) -> {
+            sortedData.setComparator((u1, u2) -> {
+                if ("By Name".equals(newVal)) {
+                    return u1.getBurName().compareToIgnoreCase(u2.getBurName());
+                } else if ("By Deadline".equals(newVal)) {
+                    return u1.getApplicationDeadline().compareTo(u2.getApplicationDeadline());
+                } else {
+                    return 0;
+                }
+            });
+        });
+
         bursaryTableView.setItems(sortedData);
     }
 
@@ -163,19 +183,18 @@ public class ManageBursariesController implements Initializable {
         SceneManager.switchTo("/view/add_bursary.fxml");
     }
 
+    @FXML
+    private void handleBackClick(){
+        SceneManager.switchTo("/view/dashboard.fxml");
+    }
     private void handleEditBursary(Bursary bursary) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/update_bursary.fxml"));
             Parent root = loader.load();
-
             UpdateBursaryController controller = loader.getController();
-
             controller.initData(bursary);
-
-
             Stage stage = (Stage) bursaryTableView.getScene().getWindow();
             stage.getScene().setRoot(root);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -199,7 +218,6 @@ public class ManageBursariesController implements Initializable {
                 int affectedRows = pstmt.executeUpdate();
 
                 if (affectedRows > 0) {
-                    System.out.println("Successfully deleted " + bursary.getBurName());
                     bursaryList.remove(bursary);
                     AlertUtil.showInfo("Deleted", bursary.getBurName() + " was removed.");
                 } else {
@@ -233,6 +251,7 @@ public class ManageBursariesController implements Initializable {
             Button button = new Button();
             button.setGraphic(icon);
             button.setStyle("-fx-background-color: transparent; -fx-padding: 3;");
+            button.setFont(Font.font(14));
             return button;
         } catch (Exception e) {
             System.err.println("Could not load icon: " + imagePath);

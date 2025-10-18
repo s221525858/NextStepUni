@@ -16,6 +16,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import model.Bursary;
 import util.DatabaseConnector;
 import util.SceneManager;
 
@@ -25,14 +26,12 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
-public class ViewUniversitiesController implements Initializable {
+public class ViewUniversitiesController extends BaseController implements Initializable {
 
     @FXML
-    private FlowPane universityFlowPane; // The type and name must be updated
+    private FlowPane universityFlowPane;
     @FXML
     private TextField searchField;
     @FXML
@@ -45,10 +44,18 @@ public class ViewUniversitiesController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        setupHeader();
         loadUniversitiesFromDatabase();
         displayUniversities(allUniversities);
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+        sortComboBox.getItems().addAll("Default", "By Name (A-Z)", "By Name (Z-A)");
+        sortComboBox.setValue("Default");
+        searchField.textProperty().addListener((_, _, newValue) -> {
             filterUniversities(newValue);
+        });
+
+        // sort listener
+        sortComboBox.valueProperty().addListener((_, _, _) -> {
+            filterUniversities(searchField.getText());
         });
     }
 
@@ -80,26 +87,35 @@ public class ViewUniversitiesController implements Initializable {
         }
     }
 
-
     private void filterUniversities(String searchText) {
-        if (searchText == null || searchText.trim().isEmpty()) {
-            displayUniversities(allUniversities);
-            return;
-        }
-
         List<UniversityData> filteredList = new ArrayList<>();
-        String lowerCaseFilter = searchText.toLowerCase();
 
-        for (UniversityData uni : allUniversities) {
-            if (uni.getName().toLowerCase().contains(lowerCaseFilter)) {
-                filteredList.add(uni);
+        if (searchText == null || searchText.trim().isEmpty()) {
+            filteredList.addAll(allUniversities);
+        } else {
+            String lowerCaseFilter = searchText.toLowerCase();
+            for (UniversityData uni : allUniversities) {
+                if (uni.getName().toLowerCase().contains(lowerCaseFilter)) {
+                    filteredList.add(uni);
+                }
             }
         }
+
+        applySorting(filteredList);
         displayUniversities(filteredList);
     }
 
-    private Node createUniversityCard(UniversityData uni) {
+    private void applySorting(List<UniversityData> list) {
+        String sortOption = sortComboBox.getValue();
+        if ("By Name (A-Z)".equals(sortOption)) {
+            list.sort(Comparator.comparing(UniversityData::getName));
+        } else if ("By Name (Z-A)".equals(sortOption)) {
+            list.sort(Comparator.comparing(UniversityData::getName).reversed());
+        }
+    }
 
+
+    private Node createUniversityCard(UniversityData uni) {
         VBox card = new VBox(10);
         card.setAlignment(Pos.CENTER);
         card.setPrefSize(220, 250);
@@ -112,21 +128,24 @@ public class ViewUniversitiesController implements Initializable {
         logoView.setPreserveRatio(true);
 
         try {
+            String imagePath = uni.getImagePath();
 
-            File imageFile = new File("university_images", uni.getImagePath());
-
-            if (imageFile.exists()) {
-                Image logo = new Image(imageFile.toURI().toString());
-                logoView.setImage(logo);
+            if (imagePath != null && !imagePath.trim().isEmpty()) {
+                File imageFile = new File("university_images", imagePath);
+                if (imageFile.exists()) {
+                    logoView.setImage(new Image(imageFile.toURI().toString()));
+                } else {
+                    System.err.println("Image not found: " + imageFile.getAbsolutePath());
+                    logoView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/placeholder.png"))));
+                }
             } else {
-                System.err.println("Image not found: " + imageFile.getAbsolutePath());
-                logoView.setImage(new Image(getClass().getResourceAsStream("/images/icons/placeholder.png")));
+                logoView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/placeholder.png"))));
             }
-        } catch (Exception e) {
-            System.err.println("Error loading image: " + uni.getImagePath());
-            e.printStackTrace();
 
-            logoView.setImage(new Image(getClass().getResourceAsStream("/images/icons/placeholder.png")));
+        } catch (Exception e) {
+            System.err.println("Error loading image for: " + uni.getName());
+            e.printStackTrace();
+            logoView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/placeholder.png"))));
         }
 
         Label nameLabel = new Label(uni.getName());
@@ -134,12 +153,11 @@ public class ViewUniversitiesController implements Initializable {
         nameLabel.setWrapText(true);
         nameLabel.setAlignment(Pos.CENTER);
 
-
         Button profileButton = new Button("View Profile");
+        profileButton.setFont(Font.font(14));
         profileButton.setStyle("-fx-background-color: #d51e1e; -fx-text-fill: white; -fx-font-weight: bold;");
         profileButton.setOnAction(event -> {
             System.out.println("Viewing profile for: " + uni.getName());
-            // TODO: Add navigation logic to the detailed profile view
         });
 
         card.getChildren().addAll(logoView, nameLabel, profileButton);
@@ -148,12 +166,11 @@ public class ViewUniversitiesController implements Initializable {
 
     @FXML
     private void handleLoginRegister() {
-        System.out.println("Login/Register button clicked.");
-        // TODO: Navigation to login/register screen
+        SceneManager.switchTo("/view/login_view.fxml");
     }
 
     @FXML
-    private void handleBackArrowClick(MouseEvent event) {
+    private void handleBackClick() {
        SceneManager.switchTo("/view/dashboard.fxml");
     }
 
@@ -166,4 +183,5 @@ public class ViewUniversitiesController implements Initializable {
             return imagePath;
         }
     }
+
 }

@@ -7,7 +7,7 @@ import java.util.Properties;
 public class EmailService {
 
     private static final String SENDER_EMAIL = "shipalanambhoni@gmail.com";
-    private static final String SENDER_PASSWORD = "qrcufjnidtuxjvsm";
+    private static final String SENDER_PASSWORD = "";
     public static boolean sendPasswordResetEmail(String recipientEmail, String resetCode) {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
